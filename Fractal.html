@@ -3,40 +3,67 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-  <script src="assets/js/p5.min.js"></script>
+  <style>
+    canvas { border: 1px solid #ccc; }
+  </style>
 </head>
 <body class="text-center my-3">
 
   <input type="number" id="depth" value="3" min="0" max="7" class="form-control d-inline-block w-auto">
-  <button onclick="redraw()" class="btn btn-primary">Draw Fractal</button>
+  <button id="drawBtn" class="btn btn-primary">Draw Fractal</button>
   <div id="canvas-container" class="d-flex justify-content-center my-3"></div>
 
   <script>
-    let cnv;
-    function setup(){
-      const s = Math.min(window.innerWidth-40,400);
-      cnv = createCanvas(s,s);
-      cnv.parent('canvas-container');
-      noLoop();
+    const container = document.getElementById('canvas-container');
+    const depthInput = document.getElementById('depth');
+    const drawBtn = document.getElementById('drawBtn');
+
+    let canvas = document.createElement('canvas');
+    let ctx = canvas.getContext('2d');
+    container.appendChild(canvas);
+
+    function resizeCanvas() {
+      const size = Math.min(window.innerWidth - 40, 400);
+      canvas.width = size;
+      canvas.height = size;
+      drawFractal();
     }
 
-    function draw(){
-      background(255); fill(0);
-      let l = +depth.value, o=20;
-      sierpinski({x:width/2,y:o},{x:o,y:height-o},{x:width-o,y:height-o},l);
+    function drawFractal() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#000';
+      const l = parseInt(depthInput.value, 10);
+      const offset = 20;
+      const a = { x: canvas.width/2, y: offset };
+      const b = { x: offset, y: canvas.height - offset };
+      const c = { x: canvas.width - offset, y: canvas.height - offset };
+      sierpinski(a, b, c, l);
     }
 
-    function sierpinski(a,b,c,l){
-      if(l===0) triangle(a.x,a.y,b.x,b.y,c.x,c.y);
-      else{
-        const m1={x:(a.x+b.x)/2,y:(a.y+b.y)/2},
-              m2={x:(b.x+c.x)/2,y:(b.y+c.y)/2},
-              m3={x:(c.x+a.x)/2,y:(c.y+a.y)/2};
-        sierpinski(a,m1,m3,l-1); sierpinski(m1,b,m2,l-1); sierpinski(m3,m2,c,l-1);
+    function sierpinski(a, b, c, l) {
+      if (l === 0) {
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.lineTo(c.x, c.y);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        const m1 = { x: (a.x + b.x)/2, y: (a.y + b.y)/2 };
+        const m2 = { x: (b.x + c.x)/2, y: (b.y + c.y)/2 };
+        const m3 = { x: (c.x + a.x)/2, y: (c.y + a.y)/2 };
+        sierpinski(a, m1, m3, l-1);
+        sierpinski(m1, b, m2, l-1);
+        sierpinski(m3, m2, c, l-1);
       }
     }
 
-    window.addEventListener('resize',()=>{let s=Math.min(window.innerWidth-40,400);resizeCanvas(s,s);redraw();});
+    drawBtn.addEventListener('click', drawFractal);
+    window.addEventListener('resize', resizeCanvas);
+
+    // Initial draw
+    resizeCanvas();
   </script>
+
 </body>
 </html>
